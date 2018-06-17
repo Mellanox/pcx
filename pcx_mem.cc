@@ -63,12 +63,15 @@ HostMem::~HostMem() {
   free(this->buf);
 }
 
+
+PCX_ERROR(RegMrFailed)
+
 UsrMem::UsrMem(void *buf, size_t length, VerbCtx *ctx) {
   this->sge.addr = (uint64_t)buf;
   this->mr = ibv_reg_mr(ctx->pd, buf, length, IB_ACCESS_FLAGS);
 
   if (!this->mr) {
-    throw "Reg MR failed";
+    PERR(RegMrFailed);
   }
   this->sge.length = length;
   this->sge.lkey = this->mr->lkey;

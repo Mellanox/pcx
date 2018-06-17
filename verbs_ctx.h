@@ -48,6 +48,8 @@ extern "C" {
 }
 
 #include <infiniband/verbs_exp.h>
+#include <mutex>
+
 
 #define GID_INDEX 3
 
@@ -93,6 +95,7 @@ private:
   VerbCtx();
   static VerbCtx* instance;
   static int ref;
+  static bool safeFlag;
 public:
   static VerbCtx* getInstance();
   static void remInstance();
@@ -104,6 +107,7 @@ public:
   struct ibv_qp *umr_qp;
   struct ibv_comp_channel *channel;
   struct ibv_exp_device_attr attrs;
+  std::mutex m_;
 };
 
 typedef struct peer_addr {

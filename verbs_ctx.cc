@@ -33,6 +33,9 @@
 #include "verbs_ctx.h"
 
 VerbCtx* VerbCtx::instance = NULL;
+bool VerbCtx::safeFlag = false;
+
+
 int VerbCtx::ref = 0;
 
 VerbCtx* VerbCtx::getInstance(){
@@ -47,6 +50,8 @@ void VerbCtx::remInstance(){
   --ref;
   if (ref == 0){
     delete(instance);
+    instance = NULL;
+    safeFlag = false;
   }
 }
 
@@ -70,6 +75,13 @@ VerbCtx::~VerbCtx() {
 
 // VerbCtx::VerbCtx(char *ib_devname){
 VerbCtx::VerbCtx() {
+
+  if (safeFlag){
+    fprintf(stderr,"ERROR - verb context initiated twice!");
+    throw "ERROR - verb context initiated twice!";
+  }
+  safeFlag = true;
+
   char *ib_devname = NULL;
 
   struct ibv_device **dev_list = ibv_get_device_list(nullptr);
@@ -79,7 +91,7 @@ VerbCtx::VerbCtx() {
   }
 
   if (!ib_devname) {
-    ib_dev = dev_list[0];
+    ib_dev = dev_list[2];
     if (!ib_dev) {
       throw("No IB devices found");
     }
