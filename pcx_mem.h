@@ -51,7 +51,9 @@ extern "C" {
 enum PCX_MEMORY_TYPE {
   PCX_MEMORY_TYPE_HOST,
   PCX_MEMORY_TYPE_MEMIC,
-  PCX_MEMORY_TYPE_NIM
+  PCX_MEMORY_TYPE_REMOTE,
+  PCX_MEMORY_TYPE_NIM,
+  PCX_MEMORY_TYPE_USER,
 };
 
 class NetMem {
@@ -92,7 +94,7 @@ public:
 
 class RefMem : public NetMem {
 public:
-  RefMem(NetMem *mem, uint64_t byte_offset = 0);
+  RefMem(NetMem *mem, uint64_t byte_offset, uint32_t length);
   RefMem(const RefMem &srcRef) {
     this->sge = srcRef.sge;
     this->mr = srcRef.mr;
@@ -114,14 +116,20 @@ public:
   ~RemoteMem();
 };
 
-class TempMem {
+class PipeMem {
 public:
-  TempMem(size_t length_, size_t depth_, VerbCtx *ctx,
+  PipeMem(size_t length_, size_t depth_, VerbCtx *ctx,
           int mem_type_ = PCX_MEMORY_TYPE_HOST);
-  ~TempMem();
+  PipeMem(size_t length_, size_t depth_, RemoteMem* remote);
+  PipeMem(void* buf, size_t length_, size_t depth_, VerbCtx *ctx);
+  ~PipeMem();
   RefMem operator[](size_t idx);
 
   RefMem next();
+
+  size_t getLength() {return length;};
+  size_t getDepth() {return depth;};
+
 
 private:
   NetMem *mem;
@@ -130,3 +138,8 @@ private:
   int mem_type;
   size_t cur;
 };
+
+typedef std::vector<PipeMem *> Iop;
+typedef Iop::iterator Iopit;
+
+void freeIop(Iop &iop);

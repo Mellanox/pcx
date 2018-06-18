@@ -211,6 +211,138 @@ LoopbackQp::~LoopbackQp() {
   ibv_destroy_cq(ibcq);
 }
 
+PCX_ERROR(QPCreateFailed);
+
+RingQp::RingQp(CommGraph *cgraph, p2p_exchange_func func, void *comm,
+                       uint32_t peer, uint32_t tag, PipeMem *incoming)
+    : RcQp(cgraph,incoming) {
+  this->has_scq = true;
+  cgraph->mqp->cd_recv_enable(this);
+  using namespace std::placeholders;
+
+  exchange = std::bind(func, comm, _1, _2, _3, peer, tag);
+}
+
+void RingQp::init() {
+  ibcq = cd_create_cq(ctx, cqe_count, NULL);
+  if (!ibcq) {
+    PERR(CreateCQFailed);
+  }
+
+  ibscq = cd_create_cq(ctx, scqe_count, NULL);
+  if (!ibscq) {
+    PERR(CreateCQFailed);
+  }
+
+  ibqp = rc_qp_create(ibcq, ctx, wqe_count, cqe_count, ibscq);
+
+  if (!ibqp) {
+    PERR(QPCreateFailed);
+  }
+
+  rd_peer_info_t local_info, remote_info;
+
+  local_info.buf = (uintptr_t) (*incoming)[0].sg()->addr;
+  local_info.rkey = (*incoming)[0].getMr()->rkey;
+  rc_qp_get_addr(ibqp, &local_info.addr);
+
+  exchange((void *)&local_info, (void *)&remote_info, sizeof(local_info));
+
+  RemoteMem tmp_remote(remote_info.buf, remote_info.rkey); 
+  remote = new PipeMem(incoming->getLength(), incoming->getDepth(), &tmp_remote);
+
+  rc_qp_connect(&remote_info.addr, ibqp);
+
+  qp = new qp_ctx(ibqp, ibcq, wqe_count, cqe_count, ibscq, scqe_count);
+  initiated = true;
+
+  PRINT("Ring RC QP initiated");
+}
+
+RingQp::~RingQp() {
+  delete (qp);
+  ibv_destroy_qp(ibqp);
+  ibv_destroy_cq(ibcq);
+}
+
+RingPair::RingPair(CommGraph *cgraph, p2p_exchange_func func, void *comm,
+             uint32_t myRank, uint32_t tag1, uint32_t tag2, PipeMem *incoming){
+  if (myRank%2){
+     this->right = new RingQp(cgraph, func, comm, myRank+1, tag1, incoming);
+     this->left = new RingQp(cgraph, func, comm, myRank-1, tag2, incoming);
+  } else {
+     this->left = new RingQp(cgraph, func, comm, myRank-1, tag1, incoming);
+     this->right = new RingQp(cgraph, func, comm, myRank+1, tag2, incoming);
+  }
+  right->setPair(left);
+  left->setPair(right);
+}
+
+RingPair::~RingPair(){
+  delete(right);
+  delete(left);
+}
+
+
+void RcQp::write(NetMem *local, size_t pos) {
+  ++wqe_count;
+  ++this->pair->cqe_count;
+  LambdaInstruction lambda = [this, local, pos]() {
+    this->qp->write(local, ((*this->remote)[pos]));
+  };
+  this->graph->enqueue(lambda);
+  graph->mqp->cd_send_enable(this);
+}
+
+void RcQp::writeCmpl(NetMem *local, size_t pos) {
+  ++wqe_count;
+  ++this->pair->cqe_count;
+  if (has_scq) {
+    ++scqe_count;
+  } else {
+    ++cqe_count;
+  }
+  LambdaInstruction lambda = [this, local, pos]() {
+    this->qp->writeCmpl(local, ((*this->remote)[pos]));
+  };
+  this->graph->enqueue(lambda);
+  graph->mqp->cd_send_enable(this);
+}
+
+void RcQp::reduce_write(NetMem *local, size_t pos, uint16_t num_vectors,
+                         uint8_t op, uint8_t type) {
+  wqe_count += 2;
+  ++this->pair->cqe_count;
+  LambdaInstruction lambda = [this, local, num_vectors, op, type, pos]() {
+    this->qp->reduce_write(local, ((*this->remote)[pos]), num_vectors, op, type);
+  };
+  this->graph->enqueue(lambda);
+  graph->mqp->cd_send_enable(this);
+}
+
+void RcQp::reduce_write_cmpl(NetMem *local, size_t pos, uint16_t num_vectors,
+                         uint8_t op, uint8_t type) {
+  wqe_count += 2;
+  ++this->pair->cqe_count;
+  if (has_scq) {
+    ++scqe_count;
+  } else {
+    ++cqe_count;
+  }
+  LambdaInstruction lambda = [this, local, num_vectors, op, type, pos]() {
+    this->qp->reduce_write_cmpl(local, ((*this->remote)[pos]), num_vectors, op, type);
+  };
+  this->graph->enqueue(lambda);
+  graph->mqp->cd_send_enable(this);
+}
+
+RcQp::~RcQp() {
+  if (remote){
+    delete (remote);
+  }
+}
+
+
 DoublingQp::DoublingQp(CommGraph *cgraph, p2p_exchange_func func, void *comm,
                        uint32_t peer, uint32_t tag, NetMem *incomingBuffer)
     : PcxQp(cgraph), incoming(incomingBuffer) {
@@ -222,7 +354,6 @@ DoublingQp::DoublingQp(CommGraph *cgraph, p2p_exchange_func func, void *comm,
   exchange = std::bind(func, comm, _1, _2, _3, peer, tag);
 }
 
-PCX_ERROR(QPCreateFailed);
 
 void DoublingQp::init() {
 
@@ -284,6 +415,7 @@ void DoublingQp::write(NetMem *local) {
 void DoublingQp::writeCmpl(NetMem *local) {
   ++wqe_count;
   ++this->pair->cqe_count;
+  
   LambdaInstruction lambda = [this, local]() {
     this->qp->writeCmpl(local, this->remote);
   };

@@ -284,6 +284,8 @@ void qp_ctx::writeCmpl(struct ibv_sge *local, struct ibv_sge *remote) {
   pair->cmpl_cnt += 1;
 }
 
+
+
 void qp_ctx::reduce_write(struct ibv_sge *local, struct ibv_sge *remote,
                           uint16_t num_vectors, uint8_t op, uint8_t type) {
   struct mlx5_wqe_ctrl_seg *ctrl;       // 1
@@ -307,7 +309,38 @@ void qp_ctx::reduce_write(struct ibv_sge *local, struct ibv_sge *remote,
   pair->cmpl_cnt += 1;
 }
 
-#define CE 8
+void qp_ctx::reduce_write_cmpl(struct ibv_sge *local, struct ibv_sge *remote,
+                          uint16_t num_vectors, uint8_t op, uint8_t type) {
+  struct mlx5_wqe_ctrl_seg *ctrl;       // 1
+  struct mlx5_wqe_raddr_seg *rseg;      // 1
+  struct mlx5_wqe_vectorcalc_seg *vseg; // 2
+  struct mlx5_wqe_data_seg *dseg;       // 1
+  const uint8_t ds = 5;
+  int wqe_count = qp->sq.wqe_cnt;
+  ctrl =
+      (struct mlx5_wqe_ctrl_seg *)((char *)qp->sq.buf +
+                                   qp->sq.stride * ((write_cnt) % wqe_count));
+  mlx5dv_set_ctrl_seg(ctrl, (write_cnt), MLX5_OPCODE_RDMA_WRITE_IMM, 0xff, qpn,
+                      0, ds, 0, 0);
+  rseg = (struct mlx5_wqe_raddr_seg *)(ctrl + 1);
+  mlx5dv_set_remote_data_seg(rseg, remote->addr, remote->lkey);
+  vseg = (struct mlx5_wqe_vectorcalc_seg *)(rseg + 1);
+  set_vectorcalc_seg(vseg, op, type, 4, num_vectors);
+  dseg = (struct mlx5_wqe_data_seg *)(vseg + 1);
+  mlx5dv_set_data_seg(dseg, local->length, local->lkey, local->addr);
+  write_cnt += 2;
+
+  if (!scq) {
+    this->cmpl_cnt += 1;
+  } else {
+    scq->cmpl_cnt += 1;
+  }
+
+  pair->cmpl_cnt += 1;
+}
+
+
+#define CE 0
 
 void qp_ctx::cd_send_enable(qp_ctx *slave_qp) {
   struct mlx5_wqe_ctrl_seg *ctrl;       // 1

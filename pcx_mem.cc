@@ -88,9 +88,10 @@ UmrMem::UmrMem(Iov &iov, VerbCtx *ctx) {
 
 UmrMem::~UmrMem() { ibv_dereg_mr(this->mr); }
 
-RefMem::RefMem(NetMem *mem, uint64_t offset) {
+RefMem::RefMem(NetMem *mem, uint64_t offset, uint32_t length) {
   this->sge = *(mem->sg());
   this->sge.addr += offset;
+  this->sge.length = length;
   this->mr = mem->getMr();
 }
 
@@ -101,6 +102,13 @@ void freeIov(Iov &iov) {
     delete (*it);
   }
   iov.clear();
+}
+
+void freeIop(Iop &iop) {
+  for (Iopit it = iop.begin(); it != iop.end(); ++it) {
+    delete (*it);
+  }
+  iop.clear();
 }
 
 PCX_ERROR(NotEnoughKLMs)
@@ -203,7 +211,7 @@ struct ibv_mr *register_umr(Iov &iov, VerbCtx *ctx) {
 
 PCX_ERROR(MemoryNotSupported)
 
-TempMem::TempMem(size_t length_, size_t depth_, VerbCtx *ctx, int mem_type_)
+PipeMem::PipeMem(size_t length_, size_t depth_, VerbCtx *ctx, int mem_type_)
     : length(length_), depth(depth_), mem_type(mem_type_), cur(0) {
 
   switch (mem_type) {
@@ -215,13 +223,25 @@ TempMem::TempMem(size_t length_, size_t depth_, VerbCtx *ctx, int mem_type_)
   }
 }
 
-RefMem TempMem::operator[](size_t idx) {
-  return RefMem(this->mem, length * (idx % depth));
+PipeMem::PipeMem(size_t length_, size_t depth_, RemoteMem* remote)
+    : length(length_), depth(depth_), mem_type(PCX_MEMORY_TYPE_REMOTE), cur(0) {
+
+  mem = new RemoteMem(remote->sg()->addr, remote->sg()->lkey);
 }
 
-RefMem TempMem::next() {
+PipeMem::PipeMem(void* buf, size_t length_, size_t depth_, VerbCtx *ctx)
+    : length(length_), depth(depth_), mem_type(PCX_MEMORY_TYPE_USER), cur(0) {
+
+  mem = new UsrMem(buf, length*depth , ctx);
+}
+
+RefMem PipeMem::operator[](size_t idx) {
+  return RefMem(this->mem, length * (idx % depth), length );
+}
+
+RefMem PipeMem::next() {
   ++cur;
-  return RefMem(this->mem, length * ((cur - 1) % depth));
+  return RefMem(this->mem, length * ((cur - 1) % depth), length);
 }
 
-TempMem::~TempMem() { delete (mem); }
+PipeMem::~PipeMem() { delete (mem); }

@@ -187,20 +187,41 @@ public:
   void db(uint32_t k);
   void sendCredit();
   void write(struct ibv_sge *local, struct ibv_sge *remote);
-
   void write(NetMem *local, NetMem *remote) {
     write(local->sg(), remote->sg());
   };
+  void write(NetMem *local, RefMem remote) {
+    write(local->sg(), remote.sg());
+  };
+
+
   void writeCmpl(struct ibv_sge *local, struct ibv_sge *remote);
   void writeCmpl(NetMem *local, NetMem *remote) {
     writeCmpl(local->sg(), remote->sg());
   };
+  void writeCmpl(NetMem *local, RefMem remote) {
+    writeCmpl(local->sg(), remote.sg());
+  };
+
   void reduce_write(struct ibv_sge *local, struct ibv_sge *remote,
                     uint16_t num_vectors, uint8_t op, uint8_t type);
   void reduce_write(NetMem *local, NetMem *remote, uint16_t num_vectors,
                     uint8_t op, uint8_t type) {
     reduce_write(local->sg(), remote->sg(), num_vectors, op, type);
   };
+  void reduce_write(NetMem *local, RefMem remote, uint16_t num_vectors,
+                    uint8_t op, uint8_t type) {
+    reduce_write(local->sg(), remote.sg(), num_vectors, op, type);
+  };
+
+  void reduce_write_cmpl(struct ibv_sge *local, struct ibv_sge *remote,
+                    uint16_t num_vectors, uint8_t op, uint8_t type);
+  void reduce_write_cmpl(NetMem *local, RefMem remote, uint16_t num_vectors,
+                    uint8_t op, uint8_t type) {
+    reduce_write_cmpl(local->sg(), remote.sg(), num_vectors, op, type);
+  };
+
+
   void cd_send_enable(qp_ctx *slave_qp);
   void cd_recv_enable(qp_ctx *slave_qp);
   void cd_wait(qp_ctx *slave_qp);

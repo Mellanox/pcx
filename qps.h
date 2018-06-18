@@ -123,6 +123,27 @@ typedef int (*p2p_exchange_func)(void *, volatile void *, volatile void *,
 typedef std::function<void(volatile void *, volatile void *, size_t)>
     LambdaExchange;
 
+
+class RcQp: public PcxQp{
+public:
+  RcQp(CommGraph *cgraph, PipeMem* incoming_): PcxQp(cgraph), incoming(incoming_) {};
+  virtual ~RcQp();
+
+  void write(NetMem *local, size_t pos = 0);
+  void writeCmpl(NetMem *local, size_t pos = 0);
+  void reduce_write(NetMem *local, size_t pos, uint16_t num_vectors, uint8_t op, uint8_t type);
+  void reduce_write_cmpl(NetMem *local, size_t pos, uint16_t num_vectors, uint8_t op, uint8_t type);
+
+
+  void setPair(PcxQp* pair_){ this->pair = pair_;};
+
+
+protected:
+  PipeMem *remote;
+  PipeMem *incoming;
+
+};
+
 class DoublingQp : public PcxQp {
 public:
   DoublingQp(CommGraph *cgraph, p2p_exchange_func func, void *comm,
@@ -135,6 +156,26 @@ public:
   RemoteMem *remote;
   NetMem *incoming;
   LambdaExchange exchange;
+};
+
+class RingQp : public RcQp {
+public:
+  RingQp(CommGraph *cgraph, p2p_exchange_func func, void *comm,
+             uint32_t peer, uint32_t tag, PipeMem *incoming);
+
+  void init();
+  ~RingQp();
+  LambdaExchange exchange;
+};
+
+class RingPair{
+public:
+  RingPair(CommGraph *cgraph, p2p_exchange_func func, void *comm,
+             uint32_t myRank, uint32_t tag1, uint32_t tag2 , PipeMem *incoming);
+  ~RingPair();
+
+  RingQp* right;
+  RingQp* left;
 };
 
 struct ibv_qp *create_management_qp(struct ibv_cq *cq, VerbCtx *verb_ctx,
