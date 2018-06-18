@@ -63,7 +63,6 @@ HostMem::~HostMem() {
   free(this->buf);
 }
 
-
 PCX_ERROR(RegMrFailed)
 
 UsrMem::UsrMem(void *buf, size_t length, VerbCtx *ctx) {

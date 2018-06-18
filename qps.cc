@@ -1,34 +1,27 @@
 
 #include "qps.h"
 
-CommGraph::CommGraph(VerbCtx *vctx) : ctx(vctx), mqp(NULL), iq(), qp_cnt(0){
+CommGraph::CommGraph(VerbCtx *vctx) : ctx(vctx), mqp(NULL), iq(), qp_cnt(0) {
   mqp = new ManagementQp(this);
   ctx->mtx.lock();
-
 }
 
-void CommGraph::regQp(PcxQp *qp) { 
+void CommGraph::regQp(PcxQp *qp) {
   qps.push_back(qp);
   qp->id = qp_cnt;
   ++qp_cnt;
 }
 
-void CommGraph::enqueue(LambdaInstruction &ins) { 
-  iq.push(std::move(ins)); 
-}
+void CommGraph::enqueue(LambdaInstruction &ins) { iq.push(std::move(ins)); }
 
-void CommGraph::wait(PcxQp *slave_qp) { 
+void CommGraph::wait(PcxQp *slave_qp) {
   PRINT("Wait...");
-  mqp->cd_wait(slave_qp); 
+  mqp->cd_wait(slave_qp);
 }
 
-void CommGraph::wait_send(PcxQp *slave_qp) { 
-  mqp->cd_wait_send(slave_qp); 
-}
+void CommGraph::wait_send(PcxQp *slave_qp) { mqp->cd_wait_send(slave_qp); }
 
-void CommGraph::db() {
-  mqp->qp->db();
-}
+void CommGraph::db() { mqp->qp->db(); }
 
 void CommGraph::finish() {
   PRINT("Initializing QPs...");
@@ -55,7 +48,6 @@ CommGraph::~CommGraph() { delete (mqp); }
 void PcxQp::db() { this->qp->db(); }
 
 void PcxQp::db(uint32_t k) { this->qp->db(k); }
-
 
 void PcxQp::poll() { this->qp->poll(); }
 
@@ -128,7 +120,8 @@ void ManagementQp::cd_send_enable(PcxQp *slave_qp) {
   this->graph->enqueue(lambda);
 }
 
-void ManagementQp::cd_recv_enable(PcxQp *slave_qp) { // call from PcxQp constructor
+void ManagementQp::cd_recv_enable(
+    PcxQp *slave_qp) { // call from PcxQp constructor
   ++wqe_count;
   LambdaInstruction lambda = [this, slave_qp]() {
     this->qp->cd_recv_enable(slave_qp->qp);
@@ -153,7 +146,8 @@ void ManagementQp::cd_wait_send(PcxQp *slave_qp) {
   this->graph->enqueue(lambda);
 }
 
-ManagementQp::ManagementQp(CommGraph *cgraph) : PcxQp(cgraph), last_qp(0), has_stack(false){
+ManagementQp::ManagementQp(CommGraph *cgraph)
+    : PcxQp(cgraph), last_qp(0), has_stack(false) {
   this->pair = this;
   this->has_scq = false;
 }
@@ -162,10 +156,9 @@ PCX_ERROR(MissingContext);
 
 void ManagementQp::init() {
 
-
   PRINT("Management QP started");
 
-  if (!ctx){
+  if (!ctx) {
     PERR(MissingContext);
   }
 
@@ -175,12 +168,9 @@ void ManagementQp::init() {
   }
   PRINT("CQ Created");
 
-
   this->ibqp = create_management_qp(this->ibcq, ctx, wqe_count);
   this->qp = new qp_ctx(this->ibqp, this->ibcq, wqe_count, cqe_count);
   initiated = true;
-
-
 
   PRINT("Management QP initiated");
 }
@@ -222,7 +212,7 @@ LoopbackQp::~LoopbackQp() {
 }
 
 DoublingQp::DoublingQp(CommGraph *cgraph, p2p_exchange_func func, void *comm,
-                       uint32_t peer, uint32_t tag, NetMem* incomingBuffer)
+                       uint32_t peer, uint32_t tag, NetMem *incomingBuffer)
     : PcxQp(cgraph), incoming(incomingBuffer) {
   this->pair = this;
   this->has_scq = true;
@@ -235,7 +225,7 @@ DoublingQp::DoublingQp(CommGraph *cgraph, p2p_exchange_func func, void *comm,
 PCX_ERROR(QPCreateFailed);
 
 void DoublingQp::init() {
-  
+
   ibcq = cd_create_cq(ctx, cqe_count, NULL);
   if (!ibcq) {
     PERR(CreateCQFailed);
@@ -248,7 +238,7 @@ void DoublingQp::init() {
 
   ibqp = rc_qp_create(ibcq, ctx, wqe_count, cqe_count, ibscq);
 
-  if (!ibqp){
+  if (!ibqp) {
     PERR(QPCreateFailed);
   }
 
@@ -259,18 +249,21 @@ void DoublingQp::init() {
 
   exchange((void *)&local_info, (void *)&remote_info, sizeof(local_info));
 
+  /*
+    fprintf(stderr,"sent: buf = %lu, rkey = %u, qpn = %lu, lid = %u , gid = %u,
+    psn = %ld\n", local_info.buf,
+                  local_info.rkey,
+    local_info.addr.qpn,local_info.addr.lid,local_info.addr.gid,local_info.addr.psn
+    );
+    fprintf(stderr,"recv: buf = %lu, rkey = %u, qpn = %lu, lid = %u , gid = %u,
+    psn = %ld\n", remote_info.buf, remote_info.rkey, remote_info.addr.qpn ,
+                                                          remote_info.addr.lid,
+    remote_info.addr.gid, remote_info.addr.psn );
 
-/*
-  fprintf(stderr,"sent: buf = %lu, rkey = %u, qpn = %lu, lid = %u , gid = %u, psn = %ld\n", local_info.buf, 
-		local_info.rkey, local_info.addr.qpn,local_info.addr.lid,local_info.addr.gid,local_info.addr.psn );
-  fprintf(stderr,"recv: buf = %lu, rkey = %u, qpn = %lu, lid = %u , gid = %u, psn = %ld\n", remote_info.buf, remote_info.rkey, remote_info.addr.qpn ,
-  							remote_info.addr.lid, remote_info.addr.gid, remote_info.addr.psn );
+  */
 
-*/
-
-  remote = new RemoteMem(remote_info.buf, remote_info.rkey); 
+  remote = new RemoteMem(remote_info.buf, remote_info.rkey);
   rc_qp_connect(&remote_info.addr, ibqp);
-
 
   qp = new qp_ctx(ibqp, ibcq, wqe_count, cqe_count, ibscq, scqe_count);
   initiated = true;
@@ -299,29 +292,28 @@ void DoublingQp::writeCmpl(NetMem *local) {
 }
 
 DoublingQp::~DoublingQp() {
-  delete(remote);
+  delete (remote);
   delete (qp);
   ibv_destroy_qp(ibqp);
   ibv_destroy_cq(ibcq);
 }
 
-
 PCX_ERROR(ModifyCQFailed);
 
-//PCX_ERROR(QpFailedRTR);
+// PCX_ERROR(QpFailedRTR);
 
 PCX_ERROR(QpFailedRTS);
 
 struct ibv_cq *cd_create_cq(VerbCtx *verb_ctx, int cqe, void *cq_context,
                             struct ibv_comp_channel *channel, int comp_vector) {
-  if (cqe==0){
+  if (cqe == 0) {
     ++cqe;
   }
 
   struct ibv_cq *cq =
       ibv_create_cq(verb_ctx->context, cqe, cq_context, channel, comp_vector);
 
-  if (!cq){
+  if (!cq) {
     PERR(CreateCQFailed);
   }
 
@@ -403,7 +395,7 @@ struct ibv_qp *create_management_qp(struct ibv_cq *cq, VerbCtx *verb_ctx,
 
     if (ibv_query_gid(verb_ctx->context, 1, GID_INDEX, &gid)) {
       fprintf(stderr, "can't read sgid of index %d\n", GID_INDEX);
-      //PERR(CantReadsGid);
+      // PERR(CantReadsGid);
     }
 
     attr.ah_attr.grh.dgid = gid;

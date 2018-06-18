@@ -31,7 +31,6 @@
  */
 #pragma once
 
-
 #define DEBUGX
 #define VALIDITY_CHECKX
 #define HANG_REPORTX
@@ -49,7 +48,6 @@ extern "C" {
 
 #include <infiniband/verbs_exp.h>
 #include <mutex>
-
 
 #define GID_INDEX 3
 
@@ -89,17 +87,17 @@ extern "C" {
 #define RX_SIZE 16
 #define CX_SIZE 16
 
-
 class VerbCtx {
-private: 
+private:
   VerbCtx();
-  static VerbCtx* instance;
+  static VerbCtx *instance;
   static int ref;
   static bool safeFlag;
+
 public:
-  static VerbCtx* getInstance();
+  static VerbCtx *getInstance();
   static void remInstance();
- 
+
   ~VerbCtx();
   struct ibv_context *context;
   struct ibv_pd *pd;

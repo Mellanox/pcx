@@ -1,7 +1,7 @@
 #pragma once
 
-#include "verbs_ctx.h"
 #include "dv_mgr.h"
+#include "verbs_ctx.h"
 
 #include <functional>
 #include <queue>
@@ -35,14 +35,13 @@ public:
 
   ManagementQp *mqp;
 
-//  friend PcxQp;
+  //  friend PcxQp;
 
-//protected:
+  // protected:
   VerbCtx *ctx;
   InsQueue iq;
   GraphQps qps;
   uint16_t qp_cnt;
-
 };
 
 class PcxQp {
@@ -57,12 +56,10 @@ public:
   void reduce_write(NetMem *local, NetMem *remote, uint16_t num_vectors,
                     uint8_t op, uint8_t type);
 
-
   void poll();
   void db(uint32_t k);
   void print();
   void db();
-
 
   int wqe_count;
   int cqe_count;
@@ -71,6 +68,7 @@ public:
 
   uint16_t id;
   qp_ctx *qp;
+
 protected:
   CommGraph *graph;
   struct ibv_qp *ibqp;
@@ -93,10 +91,9 @@ public:
   ~ManagementQp();
   void init();
 
-
   LambdaInstruction stack;
   uint16_t last_qp;
-  bool     has_stack;
+  bool has_stack;
 };
 
 class LoopbackQp : public PcxQp {
@@ -121,14 +118,15 @@ typedef struct rd_peer_info {
   peer_addr_t addr;
 } rd_peer_info_t;
 
-typedef int (*p2p_exchange_func)(void *, volatile void *, volatile void *, size_t, uint32_t,
-                                 uint32_t);
-typedef std::function<void(volatile void *,volatile void *, size_t)> LambdaExchange;
+typedef int (*p2p_exchange_func)(void *, volatile void *, volatile void *,
+                                 size_t, uint32_t, uint32_t);
+typedef std::function<void(volatile void *, volatile void *, size_t)>
+    LambdaExchange;
 
 class DoublingQp : public PcxQp {
 public:
   DoublingQp(CommGraph *cgraph, p2p_exchange_func func, void *comm,
-             uint32_t peer, uint32_t tag, NetMem* incomingBuffer);
+             uint32_t peer, uint32_t tag, NetMem *incomingBuffer);
   ~DoublingQp();
   void init();
   void write(NetMem *local);
@@ -147,7 +145,6 @@ struct ibv_qp *rc_qp_create(struct ibv_cq *cq, VerbCtx *verb_ctx,
                             struct ibv_cq *s_cq = NULL, int slaveRecv = 1,
                             int slaveSend = 1);
 
-struct ibv_cq *cd_create_cq(VerbCtx *verb_ctx, int cqe,
-                            void *cq_context = NULL,
+struct ibv_cq *cd_create_cq(VerbCtx *verb_ctx, int cqe, void *cq_context = NULL,
                             struct ibv_comp_channel *channel = NULL,
                             int comp_vector = 0);

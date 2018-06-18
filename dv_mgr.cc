@@ -468,7 +468,7 @@ void ValRearmTasks::exec(uint32_t increment, uint32_t src_offset,
 }
 
 void qp_ctx::printSq() {
-  fprintf(stderr, "Sq %lu: %dX%d\n", qpn,  qp->sq.stride, qp->sq.wqe_cnt);
+  fprintf(stderr, "Sq %lu: %dX%d\n", qpn, qp->sq.stride, qp->sq.wqe_cnt);
   print_buffer(this->qp->sq.buf, qp->sq.stride * qp->sq.wqe_cnt);
 }
 
@@ -478,10 +478,10 @@ void qp_ctx::printRq() {
 }
 
 void qp_ctx::printCq() {
-  fprintf(stderr, "Cq %u:\n",cq->cqn);
+  fprintf(stderr, "Cq %u:\n", cq->cqn);
   print_buffer(this->cq->buf, cq->cqe_size * cq->cqe_cnt);
   if (this->scq) {
-    fprintf(stderr, "Send Cq %u:\n",scq->cq->cqn);
+    fprintf(stderr, "Send Cq %u:\n", scq->cq->cqn);
     print_buffer(this->scq->cq->buf, cq->cqe_size * cq->cqe_cnt);
   }
 }

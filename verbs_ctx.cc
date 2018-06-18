@@ -32,24 +32,23 @@
 
 #include "verbs_ctx.h"
 
-VerbCtx* VerbCtx::instance = NULL;
+VerbCtx *VerbCtx::instance = NULL;
 bool VerbCtx::safeFlag = false;
-
 
 int VerbCtx::ref = 0;
 
-VerbCtx* VerbCtx::getInstance(){
-  if (ref == 0){
+VerbCtx *VerbCtx::getInstance() {
+  if (ref == 0) {
     instance = new VerbCtx();
-  } 
+  }
   ++ref;
   return instance;
 }
 
-void VerbCtx::remInstance(){
+void VerbCtx::remInstance() {
   --ref;
-  if (ref == 0){
-    delete(instance);
+  if (ref == 0) {
+    delete (instance);
     instance = NULL;
     safeFlag = false;
   }
@@ -76,8 +75,8 @@ VerbCtx::~VerbCtx() {
 // VerbCtx::VerbCtx(char *ib_devname){
 VerbCtx::VerbCtx() {
 
-  if (safeFlag){
-    fprintf(stderr,"ERROR - verb context initiated twice!");
+  if (safeFlag) {
+    fprintf(stderr, "ERROR - verb context initiated twice!");
     throw "ERROR - verb context initiated twice!";
   }
   safeFlag = true;
@@ -203,7 +202,7 @@ int rc_qp_get_addr(struct ibv_qp *qp, peer_addr_t *addr) {
 
   if (ibv_query_gid(qp->context, 1, GID_INDEX, &addr->gid)) {
     fprintf(stderr, "can't read sgid of index %d\n", GID_INDEX);
-    //PERR(CantReadsGid);
+    // PERR(CantReadsGid);
   }
 }
 
@@ -225,12 +224,12 @@ int rc_qp_connect(peer_addr_t *addr, struct ibv_qp *qp) {
   attr.ah_attr.grh.sgid_index = GID_INDEX;
   int res;
   if (ibv_modify_qp(qp, &attr, IBV_QP_STATE | IBV_QP_AV | IBV_QP_PATH_MTU |
-                                   IBV_QP_DEST_QPN | IBV_QP_RQ_PSN |                                 
+                                   IBV_QP_DEST_QPN | IBV_QP_RQ_PSN |
                                    IBV_QP_MAX_DEST_RD_ATOMIC |
                                    IBV_QP_MIN_RNR_TIMER)) {
-    fprintf(stderr, "Failed to modify QP to RTR. reason: %d\n",res);
+    fprintf(stderr, "Failed to modify QP to RTR. reason: %d\n", res);
     throw "a";
-    //PERR(QpFailedRTR);
+    // PERR(QpFailedRTR);
   }
 
   attr.qp_state = IBV_QPS_RTS;
@@ -242,7 +241,7 @@ int rc_qp_connect(peer_addr_t *addr, struct ibv_qp *qp) {
   if (ibv_modify_qp(qp, &attr, IBV_QP_STATE | IBV_QP_TIMEOUT |
                                    IBV_QP_RETRY_CNT | IBV_QP_RNR_RETRY |
                                    IBV_QP_SQ_PSN | IBV_QP_MAX_QP_RD_ATOMIC)) {
-    //PERR(QpFailedRTS);
+    // PERR(QpFailedRTS);
     throw 3;
   }
 

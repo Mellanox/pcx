@@ -113,7 +113,8 @@
    data written before the MemWr TLP that set the valid bit.
 */
 #if defined(__i386__)
-#define udma_from_device_barrier() asm volatile("lock; addl $0,0(%%esp) " ::: "memory")
+#define udma_from_device_barrier()                                             \
+  asm volatile("lock; addl $0,0(%%esp) " ::: "memory")
 #elif defined(__x86_64__)
 #define udma_from_device_barrier() asm volatile("lfence" ::: "memory")
 #elif defined(__PPC64__)
@@ -239,23 +240,21 @@
    Use of these macros allow the fencing inside the spinlock to be combined
    with the fencing required for DMA.
  */
-static inline void mmio_wc_spinlock(pthread_spinlock_t *lock)
-{
-	pthread_spin_lock(lock);
+static inline void mmio_wc_spinlock(pthread_spinlock_t *lock) {
+  pthread_spin_lock(lock);
 #if !defined(__i386__) && !defined(__x86_64__)
-	/* For x86 the serialization within the spin lock is enough to
-	 * strongly order WC and other memory types. */
-	mmio_wc_start();
+  /* For x86 the serialization within the spin lock is enough to
+   * strongly order WC and other memory types. */
+  mmio_wc_start();
 #endif
 }
 
-static inline void mmio_wc_spinunlock(pthread_spinlock_t *lock)
-{
-	/* It is possible that on x86 the atomic in the lock is strong enough
-	 * to force-flush the WC buffers quickly, and this SFENCE can be
-	 * omitted too. */
-	mmio_flush_writes();
-	pthread_spin_unlock(lock);
+static inline void mmio_wc_spinunlock(pthread_spinlock_t *lock) {
+  /* It is possible that on x86 the atomic in the lock is strong enough
+   * to force-flush the WC buffers quickly, and this SFENCE can be
+   * omitted too. */
+  mmio_flush_writes();
+  pthread_spin_unlock(lock);
 }
 
 #endif
