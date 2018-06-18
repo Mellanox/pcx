@@ -107,7 +107,7 @@ public:
   struct ibv_qp *umr_qp;
   struct ibv_comp_channel *channel;
   struct ibv_exp_device_attr attrs;
-  std::mutex m_;
+  std::mutex mtx;
 };
 
 typedef struct peer_addr {

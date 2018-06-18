@@ -3,6 +3,8 @@
 
 CommGraph::CommGraph(VerbCtx *vctx) : ctx(vctx), mqp(NULL), iq(), qp_cnt(0){
   mqp = new ManagementQp(this);
+  ctx->mtx.lock();
+
 }
 
 void CommGraph::regQp(PcxQp *qp) { 
@@ -43,11 +45,9 @@ void CommGraph::finish() {
   for (GraphQpsIt it = qps.begin(); it != qps.end(); ++it) {
     (*it)->fin();
   }
-
   mqp->db(mqp->recv_enables);
-
   PRINT("READY!");
-
+  ctx->mtx.unlock();
 }
 
 CommGraph::~CommGraph() { delete (mqp); }
