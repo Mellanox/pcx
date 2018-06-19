@@ -120,16 +120,16 @@ class PipeMem {
 public:
   PipeMem(size_t length_, size_t depth_, VerbCtx *ctx,
           int mem_type_ = PCX_MEMORY_TYPE_HOST);
-  PipeMem(size_t length_, size_t depth_, RemoteMem* remote);
-  PipeMem(void* buf, size_t length_, size_t depth_, VerbCtx *ctx);
+  PipeMem(size_t length_, size_t depth_, RemoteMem *remote);
+  PipeMem(void *buf, size_t length_, size_t depth_, VerbCtx *ctx);
   ~PipeMem();
   RefMem operator[](size_t idx);
 
   RefMem next();
+  void print();
 
-  size_t getLength() {return length;};
-  size_t getDepth() {return depth;};
-
+  size_t getLength() { return length; };
+  size_t getDepth() { return depth; };
 
 private:
   NetMem *mem;

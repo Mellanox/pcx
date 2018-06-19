@@ -145,7 +145,7 @@ VerbCtx::VerbCtx() {
     attr.cap.max_recv_wr = 0;
     attr.cap.max_send_sge = 1;
     attr.cap.max_recv_sge = 0;
-    attr.max_inl_send_klms = 4;
+    attr.max_inl_send_klms = 8;
 
     this->umr_qp = ibv_exp_create_qp(this->context, &attr);
     if (!this->umr_qp) {
@@ -246,4 +246,26 @@ int rc_qp_connect(peer_addr_t *addr, struct ibv_qp *qp) {
   }
 
   return 0;
+}
+
+void print_values(volatile float *buf, int count) {
+  int i = 0;
+  for (i = 0; i < count; ++i) {
+    if (i % 8 == 0) {
+      fprintf(stderr, "\n");
+    }
+    fprintf(stderr, "%.1f\t", buf[i]);
+  }
+  fprintf(stderr, "\n");
+}
+
+void print_buffer(volatile void *buf, int count) {
+  int i = 0;
+  for (i = 0; i < count / sizeof(int); ++i) {
+    if (i % 16 == 0) {
+      fprintf(stderr, "\n");
+    }
+    fprintf(stderr, "%08X  ", ntohl(((int *)buf)[i]));
+  }
+  fprintf(stderr, "\n");
 }

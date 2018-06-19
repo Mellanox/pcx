@@ -186,16 +186,13 @@ public:
   void db();
   void db(uint32_t k);
   void sendCredit();
-  void write(struct ibv_sge *local, struct ibv_sge *remote);
+  void write(const struct ibv_sge *local, const struct ibv_sge *remote);
   void write(NetMem *local, NetMem *remote) {
     write(local->sg(), remote->sg());
   };
-  void write(NetMem *local, RefMem remote) {
-    write(local->sg(), remote.sg());
-  };
+  void write(NetMem *local, RefMem remote) { write(local->sg(), remote.sg()); };
 
-
-  void writeCmpl(struct ibv_sge *local, struct ibv_sge *remote);
+  void writeCmpl(const struct ibv_sge *local, const struct ibv_sge *remote);
   void writeCmpl(NetMem *local, NetMem *remote) {
     writeCmpl(local->sg(), remote->sg());
   };
@@ -203,24 +200,24 @@ public:
     writeCmpl(local->sg(), remote.sg());
   };
 
-  void reduce_write(struct ibv_sge *local, struct ibv_sge *remote,
+  void reduce_write(const struct ibv_sge *local, const struct ibv_sge *remote,
                     uint16_t num_vectors, uint8_t op, uint8_t type);
   void reduce_write(NetMem *local, NetMem *remote, uint16_t num_vectors,
                     uint8_t op, uint8_t type) {
     reduce_write(local->sg(), remote->sg(), num_vectors, op, type);
   };
-  void reduce_write(NetMem *local, RefMem remote, uint16_t num_vectors,
+  void reduce_write(NetMem *local, RefMem &remote, uint16_t num_vectors,
                     uint8_t op, uint8_t type) {
     reduce_write(local->sg(), remote.sg(), num_vectors, op, type);
   };
 
-  void reduce_write_cmpl(struct ibv_sge *local, struct ibv_sge *remote,
-                    uint16_t num_vectors, uint8_t op, uint8_t type);
-  void reduce_write_cmpl(NetMem *local, RefMem remote, uint16_t num_vectors,
-                    uint8_t op, uint8_t type) {
-    reduce_write_cmpl(local->sg(), remote.sg(), num_vectors, op, type);
+  void reduce_write_cmpl(const struct ibv_sge *local,
+                         const struct ibv_sge *remote, uint16_t num_vectors,
+                         uint8_t op, uint8_t type);
+  void reduce_write_cmpl(NetMem *local, NetMem *remote, uint16_t num_vectors,
+                         uint8_t op, uint8_t type) {
+    reduce_write_cmpl(local->sg(), remote->sg(), num_vectors, op, type);
   };
-
 
   void cd_send_enable(qp_ctx *slave_qp);
   void cd_recv_enable(qp_ctx *slave_qp);
@@ -269,10 +266,5 @@ private:
   size_t cqes;
   volatile struct cqe64 *cur_cqe;
 };
-
-void print_values(volatile float *buf, int count);
-
-void print_buffer(volatile void *buf, int count);
-
 int cd_nop(struct mlx5dv_qp *qp, uint16_t send_cnt, uint64_t qpn,
            size_t num_pad, int signal);

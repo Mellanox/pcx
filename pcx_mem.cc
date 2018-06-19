@@ -38,7 +38,7 @@ RemoteMem::RemoteMem(uint64_t addr, uint32_t rkey) {
   this->mr = NULL;
 }
 
-RemoteMem::~RemoteMem() { PRINT("RemoteMem::~RemoteMem()"); }
+RemoteMem::~RemoteMem(){};
 
 HostMem::HostMem(size_t length, VerbCtx *ctx) {
   this->buf = malloc(length);
@@ -223,25 +223,30 @@ PipeMem::PipeMem(size_t length_, size_t depth_, VerbCtx *ctx, int mem_type_)
   }
 }
 
-PipeMem::PipeMem(size_t length_, size_t depth_, RemoteMem* remote)
+PipeMem::PipeMem(size_t length_, size_t depth_, RemoteMem *remote)
     : length(length_), depth(depth_), mem_type(PCX_MEMORY_TYPE_REMOTE), cur(0) {
 
   mem = new RemoteMem(remote->sg()->addr, remote->sg()->lkey);
 }
 
-PipeMem::PipeMem(void* buf, size_t length_, size_t depth_, VerbCtx *ctx)
+PipeMem::PipeMem(void *buf, size_t length_, size_t depth_, VerbCtx *ctx)
     : length(length_), depth(depth_), mem_type(PCX_MEMORY_TYPE_USER), cur(0) {
 
-  mem = new UsrMem(buf, length*depth , ctx);
+  mem = new UsrMem(buf, length * depth, ctx);
 }
 
 RefMem PipeMem::operator[](size_t idx) {
-  return RefMem(this->mem, length * (idx % depth), length );
+  return RefMem(this->mem, length * (idx % depth), length);
 }
 
 RefMem PipeMem::next() {
   ++cur;
   return RefMem(this->mem, length * ((cur - 1) % depth), length);
+}
+
+void PipeMem::print() {
+  fprintf(stderr, "Pipelined Memory:\n");
+  print_values((volatile float *)this->mem->sg()->addr, length * depth / 4);
 }
 
 PipeMem::~PipeMem() { delete (mem); }
