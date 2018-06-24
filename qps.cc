@@ -2,8 +2,8 @@
 #include "qps.h"
 
 CommGraph::CommGraph(VerbCtx *vctx) : ctx(vctx), mqp(NULL), iq(), qp_cnt(0) {
-  mqp = new ManagementQp(this);
   ctx->mtx.lock();
+  mqp = new ManagementQp(this);
 }
 
 void CommGraph::regQp(PcxQp *qp) {
