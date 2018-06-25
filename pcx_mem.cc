@@ -61,14 +61,13 @@ HostMem::HostMem(size_t length, VerbCtx *ctx) {
   this->sge.lkey = this->mr->lkey;
 }
 
-
 Memic::Memic(size_t length, VerbCtx *ctx) {
-  //this->buf = malloc(length);
+  // this->buf = malloc(length);
   struct ibv_exp_alloc_dm_attr dm_attr = {0};
   dm_attr.length = length;
   this->dm = ibv_exp_alloc_dm(ctx->context, &dm_attr);
-  
-  if (!dm){
+
+  if (!dm) {
     PERR(AllocateDeviceMemoryFailed);
   }
 
@@ -254,9 +253,28 @@ PipeMem::PipeMem(size_t length_, size_t depth_, VerbCtx *ctx, int mem_type_)
     : length(length_), depth(depth_), mem_type(mem_type_), cur(0) {
 
   switch (mem_type) {
+  case (PCX_MEMORY_TYPE_MEMIC): {
+    bool success = true;
+    if (ctx->maxMemic >= length_) {
+      try {
+        mem = new Memic(length * depth, ctx);
+      } catch (const PCX_ERR_AllocateDeviceMemoryFailed &e) {
+        success = false;
+      }
+    } else {
+      success = false;
+    }
+    if (success) {
+      PRINT("Memic allocated");
+      break;
+    }
+  }
+    PRINT("Memic allocation failed, using host memory...");
+  // carry on to host memory allocation
   case (PCX_MEMORY_TYPE_HOST):
     mem = new HostMem(length * depth, ctx);
     break;
+
   default:
     PERR(MemoryNotSupported);
   }

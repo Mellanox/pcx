@@ -132,10 +132,11 @@ VerbCtx::VerbCtx() {
     throw "Couldn't query device attributes";
   }
 
-  if (!(this->attrs.comp_mask & IBV_EXP_DEVICE_ATTR_MAX_DM_SIZE) || !(this->attrs.max_dm_size)) {
-    this->maxMemic=0;
+  if (!(this->attrs.comp_mask & IBV_EXP_DEVICE_ATTR_MAX_DM_SIZE) ||
+      !(this->attrs.max_dm_size)) {
+    this->maxMemic = 0;
   } else {
-    this->maxMemic= this->attrs.max_dm_size;
+    this->maxMemic = this->attrs.max_dm_size;
   }
 
   {

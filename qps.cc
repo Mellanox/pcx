@@ -109,7 +109,8 @@ void PcxQp::reduce_write(NetMem *local, NetMem *remote, uint16_t num_vectors,
 
 PcxQp::PcxQp(CommGraph *cgraph)
     : wqe_count(0), cqe_count(0), scqe_count(0), recv_enables(0),
-      initiated(false), graph(cgraph), ctx(cgraph->ctx), qp(NULL), ibqp(NULL), ibcq(NULL), ibscq(NULL) {
+      initiated(false), graph(cgraph), ctx(cgraph->ctx), qp(NULL), ibqp(NULL),
+      ibcq(NULL), ibscq(NULL) {
   cgraph->regQp(this);
 }
 

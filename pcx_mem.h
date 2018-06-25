@@ -92,7 +92,7 @@ public:
   ~Memic();
 
 private:
-  struct ibv_exp_dm* dm;
+  struct ibv_exp_dm *dm;
 };
 
 class UsrMem : public NetMem {
