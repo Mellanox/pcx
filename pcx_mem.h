@@ -86,6 +86,15 @@ private:
   void *buf;
 };
 
+class Memic : public NetMem {
+public:
+  Memic(size_t length, VerbCtx *ctx);
+  ~Memic();
+
+private:
+  struct ibv_exp_dm* dm;
+};
+
 class UsrMem : public NetMem {
 public:
   UsrMem(void *buf, size_t length, VerbCtx *ctx);

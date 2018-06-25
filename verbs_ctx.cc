@@ -90,7 +90,7 @@ VerbCtx::VerbCtx() {
   }
 
   if (!ib_devname) {
-    ib_dev = dev_list[0];
+    ib_dev = dev_list[2];
     if (!ib_dev) {
       throw("No IB devices found");
     }
@@ -126,8 +126,16 @@ VerbCtx::VerbCtx() {
   }
   memset(&this->attrs, 0, sizeof(this->attrs));
   this->attrs.comp_mask = IBV_EXP_DEVICE_ATTR_UMR;
+  this->attrs.comp_mask |= IBV_EXP_DEVICE_ATTR_MAX_DM_SIZE;
+
   if (ibv_exp_query_device(this->context, &this->attrs)) {
     throw "Couldn't query device attributes";
+  }
+
+  if (!(this->attrs.comp_mask & IBV_EXP_DEVICE_ATTR_MAX_DM_SIZE) || !(this->attrs.max_dm_size)) {
+    this->maxMemic=0;
+  } else {
+    this->maxMemic= this->attrs.max_dm_size;
   }
 
   {

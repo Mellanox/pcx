@@ -40,18 +40,54 @@ RemoteMem::RemoteMem(uint64_t addr, uint32_t rkey) {
 
 RemoteMem::~RemoteMem(){};
 
+PCX_ERROR(AllocateDeviceMemoryFailed)
+PCX_ERROR(AllocateMemoryFailed)
+PCX_ERROR(RegMrFailed)
+PCX_ERROR(ExpRegMrFailed)
+
 HostMem::HostMem(size_t length, VerbCtx *ctx) {
   this->buf = malloc(length);
 
   if (!this->buf) {
-    throw "No Memory";
+    PERR(AllocateMemoryFailed);
   }
 
   this->sge.addr = (uint64_t)buf;
   this->mr = ibv_reg_mr(ctx->pd, this->buf, length, IB_ACCESS_FLAGS);
   if (!this->mr) {
-    throw "Reg mr failed";
+    PERR(RegMrFailed);
   }
+  this->sge.length = length;
+  this->sge.lkey = this->mr->lkey;
+}
+
+
+Memic::Memic(size_t length, VerbCtx *ctx) {
+  //this->buf = malloc(length);
+  struct ibv_exp_alloc_dm_attr dm_attr = {0};
+  dm_attr.length = length;
+  this->dm = ibv_exp_alloc_dm(ctx->context, &dm_attr);
+  
+  if (!dm){
+    PERR(AllocateDeviceMemoryFailed);
+  }
+
+  struct ibv_exp_reg_mr_in mr_in;
+  mr_in.pd = ctx->pd;
+  mr_in.addr = 0;
+  mr_in.length = length;
+  mr_in.exp_access = IB_ACCESS_FLAGS;
+  mr_in.create_flags = 0;
+  mr_in.dm = this->dm;
+  mr_in.comp_mask = IBV_EXP_REG_MR_DM;
+
+  this->mr = ibv_exp_reg_mr(&mr_in);
+
+  if (!this->mr) {
+    PERR(ExpRegMrFailed)
+  }
+
+  this->sge.addr = 0;
   this->sge.length = length;
   this->sge.lkey = this->mr->lkey;
 }
@@ -63,7 +99,10 @@ HostMem::~HostMem() {
   free(this->buf);
 }
 
-PCX_ERROR(RegMrFailed)
+Memic::~Memic() {
+  ibv_dereg_mr(this->mr);
+  ibv_exp_free_dm(this->dm);
+}
 
 UsrMem::UsrMem(void *buf, size_t length, VerbCtx *ctx) {
   this->sge.addr = (uint64_t)buf;

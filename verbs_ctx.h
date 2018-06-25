@@ -106,6 +106,8 @@ public:
   struct ibv_comp_channel *channel;
   struct ibv_exp_device_attr attrs;
   std::mutex mtx;
+
+  size_t maxMemic;
 };
 
 typedef struct peer_addr {
