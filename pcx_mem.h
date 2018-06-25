@@ -87,6 +87,11 @@ private:
 };
 
 class Memic : public NetMem {
+  /*
+  This is CX-5 device memory mapped to the host memory.
+  Using this memory is about 200ns faster than using host memory.
+  So it should reduce latency in around 0.2us per, step.
+  */
 public:
   Memic(size_t length, VerbCtx *ctx);
   ~Memic();
