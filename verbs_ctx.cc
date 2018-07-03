@@ -34,24 +34,30 @@
 
 VerbCtx *VerbCtx::instance = NULL;
 bool VerbCtx::safeFlag = false;
+std::mutex VerbCtx::iniMtx;
+
 
 int VerbCtx::ref = 0;
 
 VerbCtx *VerbCtx::getInstance() {
+  iniMtx.lock();
   if (ref == 0) {
     instance = new VerbCtx();
   }
   ++ref;
+  iniMtx.unlock();
   return instance;
 }
 
 void VerbCtx::remInstance() {
+  iniMtx.lock();
   --ref;
   if (ref == 0) {
     delete (instance);
     instance = NULL;
     safeFlag = false;
   }
+  iniMtx.unlock();
 }
 
 VerbCtx::~VerbCtx() {
@@ -83,14 +89,16 @@ VerbCtx::VerbCtx() {
 
   char *ib_devname = NULL;
 
-  struct ibv_device **dev_list = ibv_get_device_list(nullptr);
+
+  int n;
+  struct ibv_device **dev_list = ibv_get_device_list(&n);
   struct ibv_device *ib_dev;
   if (!dev_list) {
     throw("Failed to get IB devices list");
   }
 
   if (!ib_devname) {
-    ib_dev = dev_list[2];
+    ib_dev = dev_list[n-2];
     if (!ib_dev) {
       throw("No IB devices found");
     }

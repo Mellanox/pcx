@@ -93,6 +93,7 @@ private:
   static VerbCtx *instance;
   static int ref;
   static bool safeFlag;
+  static std::mutex iniMtx;
 
 public:
   static VerbCtx *getInstance();

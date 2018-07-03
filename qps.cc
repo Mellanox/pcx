@@ -412,7 +412,10 @@ void DoublingQp::init() {
   local_info.rkey = incoming->getMr()->rkey;
   rc_qp_get_addr(ibqp, &local_info.addr);
 
+  ctx->mtx.unlock();
   exchange((void *)&local_info, (void *)&remote_info, sizeof(local_info));
+  ctx->mtx.lock();
+
 
   /*
     fprintf(stderr,"sent: buf = %lu, rkey = %u, qpn = %lu, lid = %u , gid = %u,
