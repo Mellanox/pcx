@@ -255,7 +255,9 @@ void RingQp::init() {
   //                local_info.rkey, local_info.addr.qpn,local_info.addr.lid
   //                ,local_info.addr.gid ,local_info.addr.psn);
 
+  ctx->mtx.unlock();
   exchange((void *)&local_info, (void *)&remote_info, sizeof(local_info));
+  ctx->mtx.lock();
 
   //  fprintf(stderr,"recv: buf = %lu, rkey = %u, qpn = %lu, lid = %u , gid =
   //  %u, psn = %ld\n", remote_info.buf, remote_info.rkey, remote_info.addr.qpn
