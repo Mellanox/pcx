@@ -36,7 +36,6 @@ VerbCtx *VerbCtx::instance = NULL;
 bool VerbCtx::safeFlag = false;
 std::mutex VerbCtx::iniMtx;
 
-
 int VerbCtx::ref = 0;
 
 VerbCtx *VerbCtx::getInstance() {
@@ -89,7 +88,6 @@ VerbCtx::VerbCtx() {
 
   char *ib_devname = NULL;
 
-
   int n;
   struct ibv_device **dev_list = ibv_get_device_list(&n);
   struct ibv_device *ib_dev;
@@ -98,7 +96,7 @@ VerbCtx::VerbCtx() {
   }
 
   if (!ib_devname) {
-    ib_dev = dev_list[n-2];
+    ib_dev = dev_list[n - 2];
     if (!ib_dev) {
       throw("No IB devices found");
     }

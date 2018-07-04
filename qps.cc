@@ -418,7 +418,6 @@ void DoublingQp::init() {
   exchange((void *)&local_info, (void *)&remote_info, sizeof(local_info));
   ctx->mtx.lock();
 
-
   /*
     fprintf(stderr,"sent: buf = %lu, rkey = %u, qpn = %lu, lid = %u , gid = %u,
     psn = %ld\n", local_info.buf,
