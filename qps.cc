@@ -224,6 +224,7 @@ RingQp::RingQp(CommGraph *cgraph, p2p_exchange_func func, void *comm,
   using namespace std::placeholders;
 
   exchange = std::bind(func, comm, _1, _2, _3, peer, tag);
+  barrier = std::bind(func, comm, _1, _2, _3, peer, tag + ((unsigned int) 0xf000) );
 }
 
 void RingQp::init() {
@@ -272,6 +273,14 @@ void RingQp::init() {
       new PipeMem(incoming->getLength(), incoming->getDepth(), &tmp_remote);
 
   rc_qp_connect(&remote_info.addr, ibqp);
+
+
+  //barrier
+
+  int ack;
+  ctx->mtx.unlock();
+  barrier((void*) &ack, (void*) &ack, sizeof(int));
+  ctx->mtx.lock();
 
   qp = new qp_ctx(ibqp, ibcq, wqe_count, cqe_count, ibscq, scqe_count);
 
@@ -389,6 +398,7 @@ DoublingQp::DoublingQp(CommGraph *cgraph, p2p_exchange_func func, void *comm,
   using namespace std::placeholders;
 
   exchange = std::bind(func, comm, _1, _2, _3, peer, tag);
+  barrier = std::bind(func, comm, _1, _2, _3, peer, tag + ((unsigned int) 0xf000) );
 }
 
 void DoublingQp::init() {
@@ -433,6 +443,12 @@ void DoublingQp::init() {
 
   remote = new RemoteMem(remote_info.buf, remote_info.rkey);
   rc_qp_connect(&remote_info.addr, ibqp);
+
+  //barrier
+  int ack;
+  ctx->mtx.unlock();
+  barrier((void*) &ack, (void*) &ack, sizeof(int));
+  ctx->mtx.lock();
 
   qp = new qp_ctx(ibqp, ibcq, wqe_count, cqe_count, ibscq, scqe_count);
   initiated = true;

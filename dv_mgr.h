@@ -245,7 +245,7 @@ public:
 
   cq_ctx *scq;
 
-  uint32_t get_poll_cnt(){ return this->poll_cnt;};
+  uint32_t get_poll_cnt() { return this->poll_cnt; };
 
 private:
   uint32_t write_cnt;

@@ -87,7 +87,7 @@ VerbCtx::VerbCtx() {
 
   fprintf(stderr, "Version: %s \n", __TIME__);
 
-  #warning "This line is being compiled"
+#warning "This line is being compiled"
 
   safeFlag = true;
 
@@ -228,7 +228,7 @@ int rc_qp_get_addr(struct ibv_qp *qp, peer_addr_t *addr) {
 
 int rc_qp_connect(peer_addr_t *addr, struct ibv_qp *qp) {
   struct ibv_qp_attr attr;
-  memset((void*) &attr , 0, sizeof(attr));
+  memset((void *)&attr, 0, sizeof(attr));
   attr.qp_state = IBV_QPS_RTR;
   attr.path_mtu = IBV_MTU_1024;
   attr.dest_qp_num = addr->qpn;
@@ -245,9 +245,9 @@ int rc_qp_connect(peer_addr_t *addr, struct ibv_qp *qp) {
   attr.ah_attr.grh.sgid_index = GID_INDEX;
   int res;
   res = ibv_modify_qp(qp, &attr, IBV_QP_STATE | IBV_QP_AV | IBV_QP_PATH_MTU |
-                                   IBV_QP_DEST_QPN | IBV_QP_RQ_PSN |
-                                   IBV_QP_MAX_DEST_RD_ATOMIC |
-                                   IBV_QP_MIN_RNR_TIMER);
+                                     IBV_QP_DEST_QPN | IBV_QP_RQ_PSN |
+                                     IBV_QP_MAX_DEST_RD_ATOMIC |
+                                     IBV_QP_MIN_RNR_TIMER);
   if (res) {
     fprintf(stderr, "Failed to modify QP to RTR. reason: %d\n", res);
     throw "a";

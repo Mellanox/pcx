@@ -151,7 +151,9 @@ public:
 
   RemoteMem *remote;
   NetMem *incoming;
+
   LambdaExchange exchange;
+  LambdaExchange barrier;
 };
 
 class RingQp : public RcQp {
@@ -162,6 +164,7 @@ public:
   void init();
   ~RingQp();
   LambdaExchange exchange;
+  LambdaExchange barrier;
 };
 
 class RingPair {
