@@ -37,6 +37,7 @@ cq_ctx::cq_ctx(struct ibv_cq *cq, size_t num_of_cqes) {
   this->cmpl_cnt = 0;
   int ret;
   struct mlx5dv_obj dv_obj = {};
+  memset((void*) &dv_obj, 0, sizeof(struct mlx5dv_obj));
 
   this->cq = (struct mlx5dv_cq *)malloc(sizeof(struct mlx5dv_cq));
   dv_obj.cq.in = cq;
@@ -58,6 +59,8 @@ qp_ctx::qp_ctx(struct ibv_qp *qp, struct ibv_cq *cq, size_t num_of_wqes,
   int ret;
 
   struct mlx5dv_obj dv_obj = {};
+  memset((void*) &dv_obj, 0, sizeof(struct mlx5dv_obj));
+
   this->qp = (struct mlx5dv_qp *)malloc(sizeof(struct mlx5dv_qp));
   this->cq = (struct mlx5dv_cq *)malloc(sizeof(struct mlx5dv_cq));
   this->qpn = qp->qp_num;

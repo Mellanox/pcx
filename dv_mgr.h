@@ -135,7 +135,7 @@ struct cqe64 {
   __be32 sop_drop_qpn;
   __be16 wqe_counter;
   uint8_t signature;
-  uint8_t op_own;
+  volatile uint8_t op_own;
 };
 
 class ValRearmTasks {
@@ -244,6 +244,8 @@ public:
   qp_ctx *pair;
 
   cq_ctx *scq;
+
+  uint32_t get_poll_cnt(){ return this->poll_cnt;};
 
 private:
   uint32_t write_cnt;
