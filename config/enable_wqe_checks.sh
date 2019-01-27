@@ -1,6 +1,16 @@
 #!/bin/bash
 
-dev=05:00.1
+mst start
+
+if [[ $# -eq 0 ]]; then
+  device=mlx5_1
+else
+  device=$1
+fi
+
+dev=`mst status -v | grep $device | awk '{printf $3; printf "\n"}'`
+
+echo $dev
 
 mcra $dev 0x24908 0x00000000
 mcra $dev 0x2490c 0xd03ffffc

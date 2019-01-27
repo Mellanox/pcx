@@ -101,7 +101,7 @@ VerbCtx::VerbCtx() {
   }
 
   if (!ib_devname) {
-    ib_dev = dev_list[n - 2];
+    ib_dev = dev_list[2];
     if (!ib_dev) {
       throw("No IB devices found");
     }
