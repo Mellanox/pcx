@@ -31,7 +31,7 @@
  */
 #pragma once
 
-#define DEBUG
+#define DEBUGX
 #define VALIDITY_CHECKX
 #define HANG_REPORTX
 
