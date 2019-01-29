@@ -87,11 +87,9 @@ VerbCtx::VerbCtx() {
 
   fprintf(stderr, "Version: %s \n", __TIME__);
 
-#warning "This line is being compiled"
-
   safeFlag = true;
 
-  char *ib_devname = NULL;
+  const char *ib_devname = std::getenv("PCX_DEVICE");
 
   int n;
   struct ibv_device **dev_list = ibv_get_device_list(&n);
